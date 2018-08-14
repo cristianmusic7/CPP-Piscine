@@ -1,0 +1,157 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   GameEngine.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: cfranco <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2018/07/01 14:38:52 by cfranco           #+#    #+#             */
+/*   Updated: 2018/07/01 14:38:54 by cfranco          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "GameEngine.hpp"
+
+GameEngine::GameEngine(void)
+{
+	std::cout << "GameEngine created!" << std::endl;
+}
+
+GameEngine::GameEngine(GameEngine const & src)
+{
+	std::cout << "Copy GameEngine created!" << std::endl;
+	*this = src;
+	return;
+}
+
+GameEngine::~GameEngine(void)
+{
+	std::cout << "GameEngine died!" << std::endl;
+}
+
+
+GameEngine&	GameEngine::operator=(GameEngine const & rhs)
+{
+	this->_window = rhs._window;
+	return *this;
+}
+
+
+void	GameEngine::draw() const
+{
+	std::cout << "Drawing " << std::endl;
+}
+
+
+void	GameEngine::draw(Player & entity, int x, int y)
+{
+	int maxX;
+    int maxY; 
+	getmaxyx(this->_window, maxY, maxX);
+
+	//std::cout << maxX << std::endl;
+
+	if (x >= maxX - 1)
+		x = maxX - 2;
+	if (y >= maxY - 1)
+		y = maxY - 2;
+
+	if (x <= 1)
+		x = 1;
+	if (y <= 1)
+		y = 1;
+
+	entity.setPX(entity.getX());
+	entity.setPY(entity.getY());
+	entity.setX(x);
+	entity.setY(y);
+
+	mvaddch(entity.getPY(), entity.getPX(), ' ');
+    mvaddch(entity.getY(), entity.getX(), entity.getSymbol());
+}
+
+void	GameEngine::draw(Enemy & entity, unsigned int x, unsigned int y)
+{
+	entity.setPX(entity.getX());
+	entity.setPY(entity.getY());
+	entity.setX(x);
+	entity.setY(y);
+	mvaddch(entity.getPY(), entity.getPX(), ' ');
+    mvaddch(entity.getY(), entity.getX(), entity.getSymbol());
+}
+
+void	GameEngine::draw(Bullet & entity, unsigned int x, unsigned int y)
+{
+	entity.setPX(entity.getX());
+	entity.setPY(entity.getY());
+	entity.setX(x);
+	entity.setY(y);
+	mvaddch(entity.getPY(), entity.getPX(), ' ');
+    mvaddch(entity.getY(), entity.getX(), entity.getSymbol());
+}
+
+
+int	GameEngine::init(void)
+{
+	this->_window = initscr();
+    cbreak();
+    noecho();
+    clear();
+    refresh();
+
+    keypad(this->_window, true);
+    nodelay(this->_window, true);
+    curs_set(0);
+
+    if(!has_colors()) {
+        endwin();
+        printf("ERROR: Terminal does not support color.\n");
+        exit(1);
+    }
+
+    start_color();
+
+    attron(A_BOLD);
+    box(this->_window, 0, 0);
+    attroff(A_BOLD);
+
+    init_pair(1, COLOR_BLACK, COLOR_CYAN);
+    wbkgd(this->_window, COLOR_PAIR(1));
+
+    return 0;
+}
+
+void	GameEngine::run(void)
+{
+	/*move(5, 5);
+
+    std::string text = "Hello world!";
+    for(size_t i = 0; i < text.size(); i++) {
+        addch(text[i]);
+        addch(' ');
+    }*/
+    Player player("");
+
+    player.setX(10);
+    player.setY(5);
+    player.setSpeed(5);
+
+    int in_char;
+
+    while(1) {
+        in_char = wgetch(this->_window);
+
+        this->draw(player, player.getX() + (in_char == KEY_RIGHT) - (in_char == KEY_LEFT),
+        			player.getY() + (in_char == KEY_DOWN) - (in_char == KEY_UP));
+       
+        usleep(10000/player.getSpeed()); // 10 ms
+        refresh();
+    }
+}
+
+void	GameEngine::close(void)
+{
+	endwin();
+}
+
+int GameEngine::_srand = std::time(NULL);
